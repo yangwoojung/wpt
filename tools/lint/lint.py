@@ -18,12 +18,18 @@ from ..gitignore.gitignore import PathFilter
 from ..wpt import testfiles
 from ..manifest.vcs import walk
 
-from manifest.sourcefile import SourceFile, js_meta_re, python_meta_re, space_chars, get_any_variants, get_default_any_variants
+from ..manifest.sourcefile import SourceFile, js_meta_re, python_meta_re, space_chars, get_any_variants, get_default_any_variants
 from six import binary_type, iteritems, itervalues
 from six.moves import range
 from six.moves.urllib.parse import urlsplit, urljoin
 
 import logging
+
+MYPY = False
+if MYPY:
+    # MYPY is set to True when run under Mypy.
+    from typing import List, Optional, Pattern, Text, Match
+
 
 logger = None
 
@@ -342,19 +348,31 @@ def filter_whitelist_errors(data, errors):
     return [item for i, item in enumerate(errors) if not whitelisted[i]]
 
 class Regexp(object):
-    pattern = None
-    file_extensions = None
-    error = None
-    _re = None
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def pattern(self):
+        # type: () -> bytes
+        pass
+
+    @abc.abstractproperty
+    def error(self):
+        # type: () -> Text
+        pass
+
+    file_extensions = None  # type: Optional[List[Text]]
 
     def __init__(self):
-        self._re = re.compile(self.pattern)
+        # type: () -> None
+        self._re = re.compile(self.pattern)  # type: Pattern
 
     def applies(self, path):
+        # type: (str) -> bool
         return (self.file_extensions is None or
                 os.path.splitext(path)[1] in self.file_extensions)
 
     def search(self, line):
+        # type: (bytes) -> Optional[Match[bytes]]
         return self._re.search(line)
 
 class TrailingWhitespaceRegexp(Regexp):
@@ -424,7 +442,7 @@ class SpecialPowersRegexp(Regexp):
     description = "SpecialPowers used; this is gecko-specific and not supported in wpt"
 
 
-regexps = [item() for item in
+regexps = [item() for item in  # type: ignore
            [TrailingWhitespaceRegexp,
             TabsRegexp,
             CRRegexp,
@@ -601,8 +619,16 @@ def check_parsed(repo_root, path, f):
 
 class ASTCheck(object):
     __metaclass__ = abc.ABCMeta
-    error = None
-    description = None
+
+    @abc.abstractproperty
+    def error(self):
+        # type: () -> Text
+        pass
+
+    @abc.abstractproperty
+    def description(self):
+        # type: () -> Text
+        pass
 
     @abc.abstractmethod
     def check(self, root):

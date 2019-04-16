@@ -78,7 +78,7 @@ class GitHasher(object):
 
 class FileSystem(object):
     def __init__(self, root, url_base, cache_path, manifest_path=None, rebuild=False):
-        from gitignore import gitignore
+        from ..gitignore import gitignore
         self.root = os.path.abspath(root)
         self.url_base = url_base
         self.ignore_cache = None
