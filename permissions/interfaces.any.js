@@ -22,7 +22,8 @@ promise_test(async () => {
 
   try {
     self.permissionStatus = await navigator.permissions.query({ name: "geolocation" });
-    self.permissionStatus = await navigator.permissions.query({ name: "background-fetch"});
+    self.permissionStatus = await navigator.permissions.query({ name: "background-fetch" });
+    self.permissionStatus = await navigator.permissions.query({ name: "periodic-background-sync" });
   } catch (e) {
     // Will be surfaced in idlharness.js's test_object below.
   }
