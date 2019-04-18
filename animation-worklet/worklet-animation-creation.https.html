@@ -61,6 +61,29 @@ function CreateKeyframeEffect(element) {
 
   promise_test(async t => {
     await runInAnimationWorklet(document.getElementById('simple_animate').textContent);
+    let iframe = document.createElement('iframe');
+    iframe.src = 'resources/iframe.html';
+    document.body.appendChild(iframe);
+
+    iframe.addEventListener('load', function() {
+      let iframe_document = iframe.contentDocument || iframe.contentWindow.document;
+      let effect = CreateKeyframeEffect(iframe_document.getElementById('iframe_box'));
+
+      let animation_with_main_frame_timeline =
+          new WorkletAnimation('test-animator', effect, document.timeline);
+      assert_equals(animation_with_main_frame_timeline.timeline, document.timeline);
+
+      let animation_with_iframe_timeline =
+          new WorkletAnimation('test-animator', effect, iframe_document.timeline);
+      assert_equals(animation_with_iframe_timeline.timeline, iframe_document.timeline);
+
+      let animation_with_default_timeline = new WorkletAnimation('test-animator', effect);
+      assert_equals(animation_with_default_timeline.timeline, document.timeline);
+    });
+  }, 'WorkletAnimation creation should choose the corrent timeline based on the input');
+
+  promise_test(async t => {
+    await runInAnimationWorklet(document.getElementById('simple_animate').textContent);
     let effect = CreateKeyframeEffect(document.querySelector('#element'));
     let options = { my_param: 'foo', my_other_param: true };
     let workletAnimation = new WorkletAnimation(
